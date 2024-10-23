@@ -1,0 +1,184 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Users
+
+model Permission {
+  id      String @id @default(uuid())
+  action  String
+  entitie String
+
+  group_permissions GroupPermission[]
+}
+
+model Group {
+  id   String @id @default(uuid())
+  name String
+
+  users             User[]
+  group_permissions GroupPermission[]
+}
+
+model GroupPermission {
+  group_id      String
+  permission_id String
+
+  group      Group      @relation(fields: [group_id], references: [id])
+  permission Permission @relation(fields: [permission_id], references: [id])
+
+  @@id([group_id, permission_id])
+}
+
+model User {
+  id          String @id @default(uuid())
+  username    String
+  first_name  String
+  second_name String
+  email       String @unique
+  password    String
+  group_id    String
+
+  group Group @relation(fields: [group_id], references: [id])
+}
+
+// Item
+
+model Style {
+  id           String @id @default(uuid())
+  name         String
+  localization Json   @default("{}")
+
+  items Item[]
+}
+
+model Palette {
+  id           String @id @default(uuid())
+  name         String
+  localization Json   @default("{}")
+
+  items Item[]
+}
+
+model Material {
+  id           String @id @default(uuid())
+  name         String
+  localization Json   @default("{}")
+
+  items Item[]
+}
+
+model Handle {
+  id           String @id @default(uuid())
+  name         String
+  localization Json   @default("{}")
+
+  items Item[]
+}
+
+model Purpose {
+  id           String @id @default(uuid())
+  name         String
+  localization Json   @default("{}")
+
+  items Item[]
+}
+
+model Color {
+  id   String @id @default(uuid())
+  name String
+  hex  String
+
+  item_colors ItemColor[]
+}
+
+model Photo {
+  id  String @id @default(uuid())
+  url String @unique
+
+  item_photos ItemPhoto[]
+}
+
+model Item {
+  id                  String   @id @default(uuid())
+  title               String
+  type                String
+  description         String
+  description_shorted String
+  price               Int
+  slug                String
+  photo               String
+  thumbnail_photo     String
+  is_available        Boolean
+  width               Int
+  height              Int
+  depth               Int
+  style_id            String
+  palette_id          String
+  material_id         String
+  handle_id           String
+  purpose_id          String
+  timestamp_created   DateTime @default(now())
+  timestamp_updated   DateTime @updatedAt
+
+  style    Style    @relation(fields: [style_id], references: [id])
+  palette  Palette  @relation(fields: [palette_id], references: [id])
+  material Material @relation(fields: [material_id], references: [id])
+  handle   Handle   @relation(fields: [handle_id], references: [id])
+  purpose  Purpose  @relation(fields: [purpose_id], references: [id])
+
+  item_photos ItemPhoto[]
+  item_colors ItemColor[]
+  OrderItem   OrderItem[]
+}
+
+model ItemPhoto {
+  item_id  String
+  photo_id String
+
+  item  Item  @relation(fields: [item_id], references: [id])
+  photo Photo @relation(fields: [photo_id], references: [id])
+
+  @@id([item_id, photo_id])
+}
+
+model ItemColor {
+  item_id      String
+  color_id     String
+  is_available Boolean
+
+  item  Item  @relation(fields: [item_id], references: [id])
+  color Color @relation(fields: [color_id], references: [id])
+
+  @@id([item_id, color_id])
+}
+
+// Order
+
+model Order {
+  id                String   @id @default(uuid())
+  first_name        String
+  second_name       String
+  phone             String
+  email             String
+  address           String
+  status            String
+  timestamp_created DateTime @default(now())
+
+  order_items OrderItem[]
+}
+
+model OrderItem {
+  item_id  String
+  order_id String
+
+  item  Item  @relation(fields: [item_id], references: [id])
+  order Order @relation(fields: [order_id], references: [id])
+
+  @@id([item_id, order_id])
+}
